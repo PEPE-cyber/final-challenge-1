@@ -1,0 +1,4 @@
+# step, square, sinusoidal
+signal_type : square
+frequency : .25
+amplitude: 20
