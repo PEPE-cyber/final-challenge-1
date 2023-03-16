@@ -1,0 +1,122 @@
+clc
+close all
+clear
+modelsData = readtable("models.csv");
+modelCount = height(modelsData);
+%%
+close all
+performanceData = zeros(5,10,modelCount);
+names = strings(modelCount,1);
+for row = 1:modelCount
+    fileName = modelsData{row,"model"}{1};
+    names(row) = strrep(fileName,"_"," ");
+    modelPerformanceData = readtable(fileName + ".csv", 'VariableNamingRule','preserve');
+    performanceData(1,:,row) = modelPerformanceData{:,"Setpoint"};
+    performanceData(2,:,row) = modelPerformanceData{:,"Settling Time"};
+    performanceData(3,:,row) = modelPerformanceData{:,"Overshoot"};
+    performanceData(4,:,row) = modelPerformanceData{:,"SSE"};
+    performanceData(5,:,row) = modelPerformanceData{:,"SAE"};
+    
+    % If the Settling Time is 0, the controller didnt arrive to the
+    % setpoint
+    for i = 2:length(performanceData(1,:,row))
+        if performanceData(2,i,row) == 0
+            performanceData(2,i,row) = 10;
+        end
+    end
+end
+performanceParameters = ["Setpoint", "Settling Time","Overshoot","Sum of Squares Error","Sum of Absolute Error"];
+
+% Plotting
+figure
+for i = 2:5
+    subplot(4,1,i-1)
+    modelsPerformanceMean = mean(performanceData(i,:,:),[modelCount,2]);
+    data = reshape(modelsPerformanceMean,1,[]);
+    b = bar(data);
+    set(gca,'xticklabel',names)
+    colors = [0 0.4470 0.7410; 0.8500 0.3250 0.0980; 0.9290 0.6940 0.1250; 0.4940 0.1840 0.5560; 0.4660 0.6740 0.1880; 0.3010 0.7450 0.9330; 0.6350 0.0780 0.1840];
+    % Change colors of bars
+    b.FaceColor = 'flat';
+    for j = 1:modelCount
+        b.CData(j,:) = colors(j,:);
+    end
+    title(performanceParameters(i));
+    if (i == 2)
+        ylim([0 2])
+    end
+end
+sgtitle('Controller performace evaluation by paramter');
+%%
+fig = figure;
+hold on
+% Add circles
+a=3; % horizontal radius
+b=3000; % vertical radius
+x0=0; % x0,y0 ellipse centre coordinates
+y0=0;
+t=-pi:0.01:pi;
+x=x0+a*cos(t);
+y=y0+b*sin(t);
+c = [255, 189, 189]/255;
+f1 = fill(x,y,c);
+
+a=2; % horizontal radius
+b=2000; % vertical radius
+x0=0; % x0,y0 ellipse centre coordinates
+y0=0;
+t=-pi:0.01:pi;
+x=x0+a*cos(t);
+y=y0+b*sin(t);
+c = [255, 230, 189]/255;
+f2 = fill(x,y, c);
+
+a=1; % horizontal radius
+b=1000; % vertical radius
+x0=0; % x0,y0 ellipse centre coordinates
+y0=0;
+t=-pi:0.01:pi;
+x=x0+a*cos(t);
+y=y0+b*sin(t);
+c = [211, 255, 201]/255;
+f3 = fill(x,y, c);
+
+figures = ["^", "square", "diamond","o", ">", "pentagram", "hexagram", "pentagram", "hexagram"];
+
+scatetterPlots = zeros(1, modelCount);
+for i = 1:modelCount
+    settlingTime = performanceData(2,:,i);
+    sae = performanceData(5,:,i);
+    scatetterPlots(i) = scatter(settlingTime,sae,200,colors(i),'filled' );
+end
+
+
+
+xlim([0 3.5]);
+ylim([0 3500]);
+xlabel("Settling Time");
+ylabel("SAE");
+
+leg2 = legend(scatetterPlots, names');
+ax = axes('Position',get(gca,'Position'),'Visible','Off');      
+leg1 = legend(ax, [f1 f2 f3], ["Optimize control" "Regular control" "Poor control"], 'Location','east');
+sgtitle('Controller performance evaluation');
+
+
+%%
+figure
+hold on
+colors = ["r", "b", "c", "m", "y", "g", "k"];
+for i = 1:modelCount
+    settlingTime = performanceData(2,:,i);
+    sae = performanceData(5,:,i);
+    overshoot = performanceData(3,:,i);
+    scatter3(settlingTime,sae,overshoot,100, colors(i), "filled");
+end
+xlabel("Settling Time");
+xlim([0 3])
+ylabel("SAE");
+zlabel("Overshoot");
+legend(names)
+sgtitle('Controller performance evaluation');
+grid on

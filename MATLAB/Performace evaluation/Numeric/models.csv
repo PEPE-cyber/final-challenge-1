@@ -1,0 +1,8 @@
+"model","kp","ki","kd"
+"PI_IAE_Rechazo",151,1572,0
+"PI_IAE_Referencia",82,1720.8,0
+"PI_Manual", 800, 1400, 0
+"PID_Manual",2228.0,1227,100
+"P_ZN",1597.359,0,0
+"PI_ZN",1437.623,800,0
+"PI_Astrom",11.6,439,0
